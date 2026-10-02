@@ -181,6 +181,7 @@ $('btnCreateApp').onclick = async () => {
     state.clientSecret = data.client_secret;
     show('appResult', '✅ 应用创建成功(client_id 已保存,无需手动复制)', 'ok');
     $('btnAuthorize').disabled = false;
+    $('btnGetToken').disabled = false;
   } catch (e) {
     show('appResult', '❌ 创建失败:' + e.message + '(检查实例地址是否正确、能否访问)', 'err');
   }
