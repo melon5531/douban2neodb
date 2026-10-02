@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""douban2neodb —— 豆瓣电影标记同步到 NeoDB
+"""离豆 (douban2neodb) —— 豆瓣电影标记同步到 NeoDB
 
 不走导出文件：直接抓取豆瓣标记列表页（同豆坟的思路），
 然后通过 NeoDB API 逐条写入（状态 / 星级 / 短评 / 标记日期都会保留）。
@@ -362,7 +362,7 @@ def main():
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
         sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-    parser = argparse.ArgumentParser(description="把豆瓣电影标记同步到 NeoDB")
+    parser = argparse.ArgumentParser(description="离豆 (douban2neodb)：把豆瓣电影标记同步到 NeoDB")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("check", help="检查豆瓣 cookie 和 NeoDB token 是否可用")
 
