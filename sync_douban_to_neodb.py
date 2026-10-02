@@ -216,9 +216,16 @@ def check_neodb(cfg):
 def neodb_fetch_item(cfg, douban_url):
     """让 NeoDB 收录该豆瓣条目并返回 uuid；确认无法收录时返回 None"""
     last_err = ""
-    for attempt in range(6):
-        resp = neodb_api(cfg, "GET", "/api/catalog/fetch",
-                         params={"url": douban_url}, ok_codes=(200, 202, 404))
+    for attempt in range(8):
+        try:
+            resp = neodb_api(cfg, "GET", "/api/catalog/fetch",
+                             params={"url": douban_url}, ok_codes=(200, 202, 404))
+        except RuntimeError as e:
+            if "429" in str(e):          # 被限流：退避 20 秒再试
+                last_err = str(e)[:120]
+                time.sleep(20)
+                continue
+            raise
         if resp.status_code == 200:
             data = resp.json()
             item_url = data.get("url") or ""
