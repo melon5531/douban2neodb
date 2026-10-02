@@ -36,9 +36,19 @@
 | --- | --- |
 | 豆瓣 user_id | 你的豆瓣主页地址 `https://www.douban.com/people/xxxxxx/` 里的 `xxxxxx` |
 | 豆瓣 Cookie | 浏览器登录 douban.com 后，F12 → Network → 任一请求 → Request Headers 里整串 `Cookie:`（单行复制） |
-| NeoDB 访问令牌 | NeoDB 网页 → 头像 → 设置 → **开发者（Developer）** → 创建令牌，勾选 `read` + `write` |
+| NeoDB 访问令牌 | 见下一节「获取 NeoDB 令牌」，或 NeoDB 网页 → 头像 → 设置 → **开发者（Developer）** → 创建令牌，勾选 `read` + `write` |
 
 把 `config.example.ini` 复制为 `config.ini` 并填入以上内容（自建 NeoDB 实例请同时修改 `base_url`）。
+
+## 获取 NeoDB 令牌（网页小工具）
+
+仓库自带一个单文件小工具 [`docs/token-tool.html`](docs/token-tool.html)，双击本地打开（或访问在线版），三步拿到令牌：
+
+1. **创建应用** —— 填好实例地址（默认 `neodb.social`，自建实例可改），点「创建应用」
+2. **授权** —— 点「打开授权页面」会新开 NeoDB 的授权页，登录并确认后，把页面上显示的授权码粘回工具
+3. **获取 Token** —— 点一下拿到 `access_token`，带一键复制，填进 `config.ini` 即可
+
+> 令牌全程在你的浏览器本地生成，不经过任何第三方服务器。在线版：<https://melon5531.github.io/douban2neodb/token-tool.html>
 
 ## 使用
 
