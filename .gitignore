@@ -1,0 +1,23 @@
+# ===== 隐私文件：绝对不要上传！=====
+# 包含豆瓣 Cookie 和 NeoDB 访问令牌，等同于账号密码
+config.ini
+
+# 本地运行状态与缓存（含个人标记数据）
+state.json
+marks_cache.json
+
+# 日志与临时产物
+*.log
+shelf_dump.json
+dup_posts.json
+openapi.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 系统
+.DS_Store
+Thumbs.db
