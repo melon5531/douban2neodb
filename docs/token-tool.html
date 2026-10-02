@@ -124,7 +124,7 @@
 
   <div class="step">
     <h2><span class="num">3</span>换取 Access Token</h2>
-    <button id="btnGetToken" disabled>获取 Token</button>
+    <button id="btnGetToken">获取 Token</button>
     <div id="tokenResult"></div>
     <details>
       <summary>用 curl 调用示例</summary>
@@ -153,8 +153,6 @@ function show(id, msg, cls) {
 
 $('instance').addEventListener('change', () => {
   state = { instance: '', clientId: '', clientSecret: '' };
-  $('btnAuthorize').disabled = true;
-  $('btnGetToken').disabled = true;
   $('appResult').style.display = 'none';
   $('tokenResult').style.display = 'none';
 });
@@ -198,8 +196,9 @@ $('btnAuthorize').onclick = () => {
 };
 
 $('btnGetToken').onclick = async () => {
+  if (!state.clientId) { show('tokenResult', '请先完成第 1 步「创建应用」', 'err'); return; }
   const code = $('authCode').value.trim();
-  if (!code) { show('tokenResult', '请先粘贴授权码', 'err'); return; }
+  if (!code) { show('tokenResult', '请先在第 2 步粘贴授权码', 'err'); return; }
   show('tokenResult', '请求中…');
   try {
     const r = await fetch(state.instance + '/oauth/token', {
