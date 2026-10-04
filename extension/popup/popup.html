@@ -51,6 +51,14 @@
     .mig .mlog div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 1px 0; }
     .mig .mlog .ok { color: #0f766e; }
     .mig .mlog .err { color: #b91c1c; }
+    /* 数据导出 */
+    .exp { border-top: 1px solid #f3f4f6; margin-top: 10px; padding-top: 10px; }
+    .exp .stat { font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+    .exp .btns { display: flex; gap: 8px; }
+    .exp button { flex: 1; margin: 0; background: #fff; color: #0f766e;
+                  border: 1px solid #99f6e4; }
+    .exp button:hover { background: #f0fdfa; }
+    .exp button:disabled { color: #9ca3af; border-color: #e5e7eb; cursor: default; }
   </style>
 </head>
 <body>
@@ -73,6 +81,16 @@
       <button id="migStop" class="stop" style="display:none">暂停</button>
     </div>
     <div class="mlog" id="migLog" style="display:none"></div>
+  </div>
+
+  <div class="exp">
+    <h2 style="margin-top:0">数据导出</h2>
+    <div class="stat" id="expStat">把 NeoDB 上的全部标记导出为本地文件备份</div>
+    <div class="btns">
+      <button id="expCsv">CSV</button>
+      <button id="expMd">Markdown</button>
+      <button id="expJson">JSON</button>
+    </div>
   </div>
 
   <button id="openOptions">打开设置</button>

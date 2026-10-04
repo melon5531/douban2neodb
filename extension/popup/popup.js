@@ -115,3 +115,33 @@ els.stop.addEventListener('click', () => {
 
 pollMigrate();
 setInterval(pollMigrate, 1000);
+
+// ---- 数据导出 ----
+
+const expStat = $('expStat');
+const expButtons = [$('expCsv'), $('expMd'), $('expJson')];
+
+function runExport(format, label) {
+  chrome.storage.local.get(['token'], (s) => {
+    if (!s || !s.token) {
+      expStat.textContent = '尚未配置 NeoDB 访问令牌，请先打开设置';
+      return;
+    }
+    expButtons.forEach((b) => { b.disabled = true; });
+    expStat.textContent = `正在导出为 ${label}…（条目多时需几秒）`;
+    try {
+      chrome.runtime.sendMessage({ type: 'd2n-export', format }, (res) => {
+        res = res || { ok: false, message: '无响应，请重试' };
+        expStat.textContent = res.message || (res.ok ? '导出完成' : '导出失败');
+        expButtons.forEach((b) => { b.disabled = false; });
+      });
+    } catch (e) {
+      expStat.textContent = '扩展后台不可用，请重试';
+      expButtons.forEach((b) => { b.disabled = false; });
+    }
+  });
+}
+
+$('expCsv').addEventListener('click', () => runExport('csv', 'CSV'));
+$('expMd').addEventListener('click', () => runExport('markdown', 'Markdown'));
+$('expJson').addEventListener('click', () => runExport('json', 'JSON'));

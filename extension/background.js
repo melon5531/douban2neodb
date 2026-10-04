@@ -200,6 +200,134 @@ async function handleMigrateOne(payload) {
   return { status: 'synced' };
 }
 
+// ---- 数据导出：把 NeoDB 全部标记下载为 CSV / Markdown / JSON ----
+
+const SHELF_CN = { complete: '看过', progress: '在看', wishlist: '想看', dropped: '放弃' };
+const DATE_FMT = (t) => {
+  if (!t) return '';
+  try {
+    const d = new Date(t);
+    const p = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  } catch (e) { return ''; }
+};
+
+async function fetchAllMarks(s) {
+  const shelves = ['complete', 'progress', 'wishlist', 'dropped'];
+  const all = [];
+  for (const shelf of shelves) {
+    let page = 1;
+    while (true) {
+      const r = await api(s, `/api/me/shelf/${shelf}?page=${page}&page_size=100`);
+      if (!r.ok || !r.data || !Array.isArray(r.data.data)) break;
+      for (const m of r.data.data) {
+        all.push({
+          shelf,
+          item: m.item || {},
+          rating: m.rating_grade || 0,
+          comment: m.comment_text || '',
+          tags: m.tags || [],
+          time: m.created_time || ''
+        });
+      }
+      if (!r.data.pages || page >= r.data.pages) break;
+      page++;
+    }
+  }
+  return all;
+}
+
+const csvCell = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+
+function buildExport(marks, format, siteBase) {
+  const doubanOf = (it) => {
+    const er = (it.item && it.item.external_resources) || [];
+    const d = er.find((e) => /douban\.com/.test(e.url || ''));
+    return d ? d.url : '';
+  };
+  const titleOf = (m) => m.item.display_title || m.item.title || '';
+  const typeOf = (m) => ({ Movie: '电影', TV: '剧集', Book: '图书', Music: '音乐', Game: '游戏', Performance: '演出' }[m.item.type] || m.item.type || '');
+  const linkOf = (m) => m.item.url ? siteBase + m.item.url : siteBase;
+  const stamp = new Date().toISOString().slice(0, 10);
+
+  if (format === 'json') {
+    return {
+      mime: 'application/json',
+      ext: 'json',
+      body: JSON.stringify({
+        exported_at: new Date().toISOString(),
+        site: siteBase,
+        count: marks.length,
+        marks: marks.map((m) => ({
+          shelf: m.shelf, shelf_cn: SHELF_CN[m.shelf], type: typeOf(m),
+          title: titleOf(m), rating: m.rating, comment: m.comment,
+          date: DATE_FMT(m.time), tags: m.tags,
+          neodb_url: linkOf(m), douban_url: doubanOf(m)
+        }))
+      }, null, 2)
+    };
+  }
+
+  if (format === 'markdown') {
+    const parts = [`# NeoDB 标记导出（${stamp}，共 ${marks.length} 条）\n`];
+    for (const shelf of ['complete', 'progress', 'wishlist', 'dropped']) {
+      const list = marks.filter((m) => m.shelf === shelf);
+      if (!list.length) continue;
+      parts.push(`\n## ${SHELF_CN[shelf]}（${list.length}）\n`);
+      for (const m of list) {
+        const head = `- [${titleOf(m)}](${linkOf(m)})（${typeOf(m)}）`
+          + (m.rating ? ` 评分 ${m.rating}/10` : '')
+          + (m.time ? ` · ${DATE_FMT(m.time)}` : '');
+        parts.push(head);
+        if (m.comment) parts.push(`  - ${m.comment.replace(/\n/g, ' ')}`);
+        if (m.tags.length) parts.push(`  - 标签：${m.tags.join('、')}`);
+      }
+    }
+    return { mime: 'text/markdown', ext: 'md', body: parts.join('\n') };
+  }
+
+  // CSV（带 BOM，Excel 打开不乱码）
+  const rows = [['状态', '类型', '标题', '评分(10分制)', '短评', '标记日期', '标签', 'NeoDB链接', '豆瓣链接']];
+  for (const m of marks) {
+    rows.push([
+      SHELF_CN[m.shelf] || m.shelf, typeOf(m), titleOf(m),
+      m.rating || '', m.comment, DATE_FMT(m.time),
+      m.tags.join('、'), linkOf(m), doubanOf(m)
+    ]);
+  }
+  return {
+    mime: 'text/csv;charset=utf-8',
+    ext: 'csv',
+    body: '\uFEFF' + rows.map((r) => r.map(csvCell).join(',')).join('\r\n')
+  };
+}
+
+async function handleExport(format) {
+  const s = await getSettings();
+  if (!s.token) return { ok: false, message: '尚未配置 NeoDB 访问令牌' };
+  format = ['csv', 'markdown', 'json'].includes(format) ? format : 'csv';
+  const marks = await fetchAllMarks(s);
+  if (!marks.length) return { ok: false, message: 'NeoDB 上没有可导出的标记' };
+  const exp = buildExport(marks, format, baseUrl(s));
+  const blob = new Blob([exp.body], { type: exp.mime });
+  const url = URL.createObjectURL(blob);
+  const filename = `neodb-marks-${new Date().toISOString().slice(0, 10)}.${exp.ext}`;
+  return new Promise((res) => {
+    try {
+      chrome.downloads.download({ url, filename, saveAs: true }, (id) => {
+        if (chrome.runtime.lastError || !id) {
+          URL.revokeObjectURL(url);
+          res({ ok: false, message: '下载失败：' + (chrome.runtime.lastError ? chrome.runtime.lastError.message : '未知错误') });
+        } else {
+          res({ ok: true, message: `已导出 ${marks.length} 条 → ${filename}` });
+        }
+      });
+    } catch (e) {
+      res({ ok: false, message: '下载失败：' + (e && e.message ? e.message : e) });
+    }
+  });
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (!msg || typeof msg !== 'object') return;
   if (msg.type === 'd2n-sync') {
@@ -212,6 +340,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     handleMigrateOne(msg.payload)
       .then((r) => sendResponse(r))
       .catch((e) => sendResponse({ status: 'failed', message: (e && e.message) || String(e) }));
+    return true;
+  }
+  if (msg.type === 'd2n-export') {
+    handleExport(msg.format)
+      .then((r) => sendResponse(r))
+      .catch((e) => sendResponse({ ok: false, message: '导出异常：' + (e && e.message ? e.message : e) }));
     return true;
   }
   if (msg.type === 'd2n-migrate-kick') {

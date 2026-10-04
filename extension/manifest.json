@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "离豆 · 豆瓣 → NeoDB 实时同步",
-  "version": "1.1.0",
-  "description": "在豆瓣网页标记/打分/写短评时实时同步到 NeoDB，并支持一键迁移全部历史标记。",
+  "version": "1.2.0",
+  "description": "在豆瓣网页标记/打分/写短评时实时同步到 NeoDB，支持一键迁移历史标记与数据导出。",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -11,7 +11,8 @@
   "permissions": [
     "storage",
     "notifications",
-    "tabs"
+    "tabs",
+    "downloads"
   ],
   "host_permissions": [
     "https://neodb.social/*"
