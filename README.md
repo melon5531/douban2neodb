@@ -14,45 +14,58 @@
 豆瓣上的影视条目时不时会「消失」——下架、合并、审核，都可能让多年攒下的标记和短评说没就没。
 而豆坟这类备份工具流程偏繁琐：装插件、等备份、导出文件、再手动导入。
 
-于是有了「离豆」：先用桌面工具**一条命令（或一次点击）把历史标记连同评分、短评、日期搬进开源的 NeoDB**，
-再装上浏览器扩展，之后每一次新标记都会实时同步过去——数据从此握在自己手里，不依赖任何中间文件。
+于是有了「离豆」：装一个浏览器扩展，**一键把历史标记连同评分、短评、日期搬进开源的 NeoDB**，
+之后每一次新标记都会实时同步过去——数据从此握在自己手里，不依赖任何中间文件。
 
-## 快速开始
+## 快速开始（浏览器扩展，一条龙）
 
-### 第一步：迁移历史标记（桌面工具）
+> 全程只需浏览器：登录着豆瓣的 Chrome / Edge（Chromium 内核，需 Chrome 111+）。
 
-1. 安装 Python 3.9+ 和 `pip install requests`；
-2. 复制 `config.example.ini` 为 `config.ini`，填三项：
-   - `user_id`：豆瓣主页地址 `https://www.douban.com/people/xxxxxx/` 里的 `xxxxxx`；
-   - `cookie`：浏览器登录豆瓣后 F12 → Network → 任一请求 → 整串 `Cookie:`；
-   - `token`：NeoDB → 设置 → 开发者 → 创建访问令牌（勾 `read` + `write`），
-     或用仓库自带的 [`docs/token-tool.html`](docs/token-tool.html) 小工具生成；
-3. 双击 `启动同步界面.bat`（或 `python gui.py`）：测试连接 → 预览 → 开始同步；
-   命令行党：`python sync_douban_to_neodb.py sync`（支持 `--dry-run` / `--limit` / `--statuses` / `--full`）。
+**1. 安装扩展**
 
-![图形界面](docs/screenshot.png)
+下载本仓库 → 浏览器打开 `chrome://extensions`（Edge 输入 `edge://extensions`）→
+打开右上角的**「开发者模式」**→ 点**「加载已解压的扩展程序」**→ 选择 `extension` 文件夹 →
+固定到工具栏。
 
-同步是增量的：未变化自动跳过、可中断续传、重复运行不产生重复标记。
-抓取结果缓存于 `marks_cache.json`（6 小时内有效），删除即强制重抓。
+**2. 配置 NeoDB 令牌**
 
-### 第二步：日常实时同步（浏览器扩展）
+点扩展图标 → **打开设置** → 粘贴访问令牌 → **保存设置 → 测试连接**。
+令牌获取：NeoDB → 设置 → 开发者（[neodb.social/developer](https://neodb.social/developer/)）→ Authorize 生成，
+或用仓库自带的 [`docs/token-tool.html`](docs/token-tool.html) 小工具三步生成。
 
-见 [`extension/README.md`](extension/README.md)——加载扩展、配置令牌（支持一键 OAuth），
-之后在豆瓣页面的每次标记都会自动同步，右下角弹窗提示结果。
+**3. 迁移历史标记**
 
-### 获取 NeoDB 访问令牌
+点扩展图标 → **「历史标记迁移」→ 开始迁移**。扩展会自动打开你的豆瓣标记页，
+分页抓取**看过 → 想看 → 在看**（含星级、短评、标记日期）并逐条同步到 NeoDB。
+进度条实时显示，可随时**暂停**、再点**继续**从断点接着跑；
+已同步的条目自动跳过，重复运行不会产生重复标记。
 
-- **网页小工具**：仓库自带 [`docs/token-tool.html`](docs/token-tool.html)，双击本地打开（或访问在线版），三步拿到令牌；
-- **开发者控制台**：登录 NeoDB → `https://neodb.social/developer/` → Dev Console → Authorize。
+**4. 完事，日常无感同步**
 
-## 常见问题（桌面工具）
+迁移完成后什么都不用做：之后在豆瓣的每一次**标记、打分、写短评**都会自动实时同步到 NeoDB，
+页面右下角会弹出同步结果提示。
 
-- **豆瓣提示异常请求**：触发风控，等几小时、必要时换 Cookie，调大 `config.ini` 里的 `delay`（别低于 2 秒）；
-- **个别条目收录失败**：多为豆瓣已下架条目，NeoDB 无法收录，脚本会跳过并汇总；之后 `sync --full` 可补齐；
-- **NeoDB 返回 401**：令牌失效（重新生成过或退出登录），重新生成即可；
-- **会重复吗**：不会。本地缓存 + NeoDB 端标记双重比对，重复运行只处理有变化的部分。
+> 迁移节奏保守（豆瓣页面间隔约 3 秒），上千条标记预计 1~2 小时，期间保持豆瓣标签页打开即可。
+> 扩展的详细说明与常见问题见 [`extension/README.md`](extension/README.md)。
 
-扩展的常见问题见 [`extension/README.md`](extension/README.md)。
+## 桌面工具（可选的备用方案）
+
+`extension` 之外的 Python 脚本是同一功能的命令行实现，适合不想装扩展、或想在不打开浏览器的情况下批量处理的人：
+
+1. `pip install requests`，复制 `config.example.ini` 为 `config.ini`，填入豆瓣 user_id、豆瓣 Cookie、NeoDB 令牌；
+2. `python gui.py` 打开图形界面（或双击 `启动同步界面.bat`），或直接命令行：
+
+   ```bash
+   python sync_douban_to_neodb.py check            # 验证凭据
+   python sync_douban_to_neodb.py sync --dry-run   # 预览，不写入
+   python sync_douban_to_neodb.py sync             # 全量增量同步
+   ```
+
+同步是增量的：未变化自动跳过、可中断续传；抓取结果缓存于 `marks_cache.json`（6 小时内有效）。
+常见问题：豆瓣提示异常请求 = 触发风控，等几小时并调大 `config.ini` 的 `delay`；
+NeoDB 401 = 令牌失效，重新生成；个别条目收录失败 = 豆瓣已下架，`sync --full` 可补齐。
+
+![桌面工具图形界面](docs/screenshot.png)
 
 ## 免责声明
 
