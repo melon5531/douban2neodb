@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      width: 320px; margin: 0; padding: 14px;
+      font: 13px/1.5 -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; color: #111827;
+      background: #fff;
+    }
+    h1 { font-size: 14px; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+    h1 .n { color: #0d9488; }
+    .status { font-size: 12px; color: #6b7280; margin-bottom: 10px; }
+    .status b.ok { color: #059669; }
+    .status b.bad { color: #dc2626; }
+    .row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0;
+           border-top: 1px solid #f3f4f6; }
+    .row label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    button {
+      width: 100%; padding: 8px; margin-top: 10px; border: 0; border-radius: 8px;
+      font-size: 13px; cursor: pointer; background: #0d9488; color: #fff;
+    }
+    button:hover { background: #0f766e; }
+    h2 { font-size: 12px; color: #6b7280; margin: 14px 0 6px; font-weight: 600; }
+    .list { max-height: 220px; overflow-y: auto; }
+    .item { padding: 6px 0; border-top: 1px solid #f3f4f6; font-size: 12.5px; }
+    .item .t { display: flex; justify-content: space-between; gap: 8px; }
+    .item a { color: #0f766e; text-decoration: none; word-break: break-all; }
+    .item a:hover { text-decoration: underline; }
+    .item .time { color: #9ca3af; flex: none; }
+    .badge { flex: none; font-size: 11px; padding: 1px 6px; border-radius: 4px; }
+    .badge.ok { background: #ccfbf1; color: #0f766e; }
+    .badge.err { background: #fee2e2; color: #b91c1c; }
+    .empty { color: #9ca3af; font-size: 12px; padding: 8px 0; }
+    .shelf { color: #6b7280; }
+    /* 历史迁移 */
+    .mig { border-top: 1px solid #f3f4f6; margin-top: 10px; padding-top: 10px; }
+    .mig .bar { height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; margin: 8px 0 4px; }
+    .mig .bar > div { height: 100%; background: #0d9488; width: 0; transition: width .3s; }
+    .mig .stat { font-size: 12px; color: #374151; display: flex; justify-content: space-between; }
+    .mig .stat .sub { color: #6b7280; }
+    .mig .btns { display: flex; gap: 8px; margin-top: 8px; }
+    .mig button { flex: 1; margin: 0; }
+    .mig button.ghost { background: #fff; color: #0f766e; border: 1px solid #99f6e4; }
+    .mig button.ghost:hover { background: #f0fdfa; }
+    .mig button.stop { background: #fff; color: #b91c1c; border: 1px solid #fecaca; }
+    .mig button.stop:hover { background: #fef2f2; }
+    .mig .mlog { max-height: 96px; overflow-y: auto; font-size: 11.5px; color: #4b5563;
+                 background: #f9fafb; border-radius: 6px; padding: 6px 8px; margin-top: 8px; }
+    .mig .mlog div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 1px 0; }
+    .mig .mlog .ok { color: #0f766e; }
+    .mig .mlog .err { color: #b91c1c; }
+  </style>
+</head>
+<body>
+  <h1><span class="n">豆瓣 → NeoDB</span> 同步状态</h1>
+  <div class="status" id="conn">检查中…</div>
+  <div class="row">
+    <label><input type="checkbox" id="autoSync"> 自动同步</label>
+  </div>
+  <h2>最近同步</h2>
+  <div class="list" id="list"><div class="empty">暂无记录</div></div>
+
+  <div class="mig">
+    <h2 style="margin-top:0">历史标记迁移</h2>
+    <div class="stat"><span id="migPhase">未开始</span><span class="sub" id="migCount"></span></div>
+    <div class="bar"><div id="migBar"></div></div>
+    <div class="stat"><span class="sub" id="migDetail">&nbsp;</span></div>
+    <div class="btns">
+      <button id="migStart">开始迁移</button>
+      <button id="migResume" class="ghost" style="display:none">继续</button>
+      <button id="migStop" class="stop" style="display:none">暂停</button>
+    </div>
+    <div class="mlog" id="migLog" style="display:none"></div>
+  </div>
+
+  <button id="openOptions">打开设置</button>
+  <script src="popup.js"></script>
+</body>
+</html>

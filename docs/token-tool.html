@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeoDB Access Token 获取工具</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: #f4f1ea;
+    color: #2d2a26;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 16px rgba(0,0,0,.08);
+    padding: 32px;
+    width: 100%;
+    max-width: 640px;
+    height: fit-content;
+  }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .sub { color: #8a857c; font-size: 13px; margin-bottom: 24px; }
+  .step {
+    border-left: 3px solid #4a7c59;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    background: #faf9f6;
+    border-radius: 0 8px 8px 0;
+  }
+  .step h2 { font-size: 15px; margin-bottom: 10px; }
+  .step h2 .num {
+    display: inline-block;
+    background: #4a7c59;
+    color: #fff;
+    width: 22px; height: 22px;
+    line-height: 22px;
+    text-align: center;
+    border-radius: 50%;
+    font-size: 13px;
+    margin-right: 8px;
+  }
+  label { font-size: 13px; color: #6b665e; display: block; margin: 8px 0 4px; }
+  input[type=text] {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #d8d3c8;
+    border-radius: 6px;
+    font-size: 14px;
+    background: #fff;
+  }
+  input[type=text]:focus { outline: none; border-color: #4a7c59; }
+  button {
+    background: #4a7c59;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 9px 18px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  button:hover { background: #3d6a4b; }
+  button:disabled { background: #b9b4aa; cursor: not-allowed; }
+  button.ghost {
+    background: transparent;
+    color: #4a7c59;
+    border: 1px solid #4a7c59;
+  }
+  button.ghost:hover { background: #eef4ef; }
+  .result {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px dashed #c9c3b6;
+    border-radius: 6px;
+    font-size: 13px;
+    word-break: break-all;
+  }
+  .result.ok { border-color: #4a7c59; background: #eef4ef; }
+  .result.err { border-color: #b4543c; background: #f9efec; color: #8c3a26; }
+  .token-box {
+    display: flex; gap: 8px; align-items: stretch; margin-top: 10px;
+  }
+  .token-box input { font-family: monospace; font-size: 13px; }
+  .hint { font-size: 12px; color: #8a857c; margin-top: 6px; }
+  .hint a { color: #4a7c59; }
+  .copy-btn { margin-top: 0; padding: 9px 14px; }
+  details { margin-top: 8px; }
+  summary { font-size: 13px; color: #4a7c59; cursor: pointer; }
+  pre {
+    background: #2d2a26; color: #d8d3c8;
+    padding: 10px; border-radius: 6px;
+    font-size: 12px; overflow-x: auto; margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🔖 NeoDB Access Token 获取工具</h1>
+  <p class="sub">三步拿到 access token,全程在浏览器完成,数据不经过任何第三方。</p>
+
+  <div class="step">
+    <h2><span class="num">1</span>创建应用</h2>
+    <label>实例地址</label>
+    <input type="text" id="instance" value="https://neodb.social" placeholder="https://neodb.social">
+    <label>应用名称(随意填)</label>
+    <input type="text" id="appName" value="MyTokenTool">
+    <button id="btnCreateApp">创建应用</button>
+    <div id="appResult"></div>
+  </div>
+
+  <div class="step">
+    <h2><span class="num">2</span>打开授权页面并登录确认</h2>
+    <button id="btnAuthorize" class="ghost" disabled>打开授权页面 ↗</button>
+    <label>授权后页面会显示一串授权码(code),把它粘贴到这里:</label>
+    <input type="text" id="authCode" placeholder="粘贴授权码">
+  </div>
+
+  <div class="step">
+    <h2><span class="num">3</span>换取 Access Token</h2>
+    <button id="btnGetToken">获取 Token</button>
+    <div id="tokenResult"></div>
+    <details>
+      <summary>用 curl 调用示例</summary>
+      <pre id="curlExample">获取 token 后这里会显示示例命令</pre>
+    </details>
+  </div>
+
+  <p class="hint">接口文档:<a id="devDocs" href="https://neodb.social/developer/" target="_blank">https://neodb.social/developer/</a></p>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let state = { instance: '', clientId: '', clientSecret: '' };
+
+function normInstance(u) {
+  u = u.trim().replace(/\/+$/, '');
+  if (!/^https?:\/\//.test(u)) u = 'https://' + u;
+  return u;
+}
+function show(id, msg, cls) {
+  const el = $(id);
+  el.className = 'result ' + (cls || '');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+$('instance').addEventListener('change', () => {
+  state = { instance: '', clientId: '', clientSecret: '' };
+  $('appResult').style.display = 'none';
+  $('tokenResult').style.display = 'none';
+});
+
+$('btnCreateApp').onclick = async () => {
+  const inst = normInstance($('instance').value);
+  state.instance = inst;
+  $('devDocs').href = inst + '/developer/';
+  show('appResult', '请求中…');
+  try {
+    const r = await fetch(inst + '/api/v1/apps', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_name: $('appName').value.trim() || 'MyTokenTool',
+        redirect_uris: 'urn:ietf:wg:oauth:2.0:oob',
+        website: inst
+      })
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    if (!data.client_id) throw new Error('响应中没有 client_id: ' + JSON.stringify(data));
+    state.clientId = data.client_id;
+    state.clientSecret = data.client_secret;
+    show('appResult', '✅ 应用创建成功(client_id 已保存,无需手动复制)', 'ok');
+    $('btnAuthorize').disabled = false;
+    $('btnGetToken').disabled = false;
+  } catch (e) {
+    show('appResult', '❌ 创建失败:' + e.message + '(检查实例地址是否正确、能否访问)', 'err');
+  }
+};
+
+$('btnAuthorize').onclick = () => {
+  const url = state.instance + '/oauth/authorize?' + new URLSearchParams({
+    response_type: 'code',
+    client_id: state.clientId,
+    redirect_uri: 'urn:ietf:wg:oauth:2.0:oob',
+    scope: 'read write'
+  });
+  window.open(url, '_blank');
+};
+
+$('btnGetToken').onclick = async () => {
+  if (!state.clientId) { show('tokenResult', '请先完成第 1 步「创建应用」', 'err'); return; }
+  const code = $('authCode').value.trim();
+  if (!code) { show('tokenResult', '请先在第 2 步粘贴授权码', 'err'); return; }
+  show('tokenResult', '请求中…');
+  try {
+    const r = await fetch(state.instance + '/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: state.clientId,
+        client_secret: state.clientSecret,
+        code: code,
+        redirect_uri: 'urn:ietf:wg:oauth:2.0:oob',
+        grant_type: 'authorization_code'
+      })
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    if (!data.access_token) throw new Error('响应中没有 access_token: ' + JSON.stringify(data));
+    const token = data.access_token;
+
+    const box = document.createElement('div');
+    box.className = 'token-box';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = token;
+    input.readOnly = true;
+    const btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.textContent = '复制';
+    btn.onclick = () => {
+      navigator.clipboard.writeText(token).then(() => { btn.textContent = '已复制 ✓'; setTimeout(() => btn.textContent = '复制', 1500); });
+    };
+    box.append(input, btn);
+    $('tokenResult').innerHTML = '';
+    const ok = document.createElement('div');
+    ok.className = 'result ok';
+    ok.textContent = '✅ 获取成功!Token 如下(点击右侧按钮复制):';
+    $('tokenResult').append(ok, box);
+    $('btnGetToken').disabled = false;
+    $('curlExample').textContent =
+      `# 测试\n` +
+      `curl -H "Authorization: Bearer ${token}" ${state.instance}/api/me\n\n` +
+      `# 例:获取书架上"想读"的条目\n` +
+      `curl -H "Authorization: Bearer ${token}" "${state.instance}/api/me/shelf/wishlist?page=1"`;
+  } catch (e) {
+    show('tokenResult', '❌ 获取失败:' + e.message + '(授权码只能用一次,过期或不对就回第 2 步重新授权)', 'err');
+  }
+};
+</script>
+</body>
+</html>

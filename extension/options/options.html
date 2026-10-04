@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>豆瓣 → NeoDB 同步 · 设置</title>
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 32px 16px; background: #f3f4f6;
+      font: 14px/1.6 -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; color: #111827;
+    }
+    .card {
+      max-width: 640px; margin: 0 auto; background: #fff;
+      border-radius: 12px; padding: 28px 32px; box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    }
+    h1 { font-size: 18px; margin: 0 0 4px; }
+    .sub { color: #6b7280; font-size: 12px; margin-bottom: 20px; }
+    h2 { font-size: 14px; margin: 24px 0 8px; color: #0f766e; }
+    label { display: block; font-weight: 600; margin: 14px 0 4px; }
+    input[type=text], input[type=password], select {
+      width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px;
+      font-size: 14px; background: #fff;
+    }
+    input:focus, select:focus { outline: 2px solid #99f6e4; border-color: #0d9488; }
+    .row { display: flex; gap: 10px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+    button {
+      padding: 8px 16px; border: 0; border-radius: 8px; font-size: 14px; cursor: pointer;
+      background: #0d9488; color: #fff;
+    }
+    button:hover { background: #0f766e; }
+    button.ghost { background: #e5e7eb; color: #374151; }
+    button.ghost:hover { background: #d1d5db; }
+    .hint {
+      background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 8px;
+      padding: 12px 14px; font-size: 12.5px; color: #134e4a; margin-top: 8px;
+    }
+    .hint code { background: #ccfbf1; padding: 1px 5px; border-radius: 4px; }
+    .hint a { color: #0f766e; }
+    .checks label { display: flex; align-items: center; gap: 8px; font-weight: 400; margin: 8px 0; }
+    .checks input { width: auto; }
+    #status { margin-left: 6px; font-size: 13px; color: #059669; }
+    #status.err { color: #dc2626; }
+    ol { margin: 6px 0; padding-left: 20px; }
+    li { margin: 3px 0; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>豆瓣 → NeoDB 同步</h1>
+    <div class="sub">在豆瓣标记 / 打分 / 写短评时，自动同步到 NeoDB · v1.0.0</div>
+
+    <h2>连接 NeoDB</h2>
+    <label for="instance">NeoDB 实例地址</label>
+    <input type="text" id="instance" placeholder="https://neodb.social">
+
+    <label for="token">访问令牌（Access Token）</label>
+    <input type="password" id="token" placeholder="粘贴你的 NeoDB Access Token">
+    <div class="hint">
+      <b>方式 A · 开发者控制台生成：</b>
+      <ol>
+        <li>登录 NeoDB，打开 <code id="devLinkText">https://neodb.social/developer/</code></li>
+        <li>在 Dev Console 中点击 <b>Authorize</b>，生成并复制 Access Token，粘贴到上方输入框</li>
+      </ol>
+      <b>方式 B · 在本页一键授权：</b>
+      <ol>
+        <li>点击「一键授权」，在打开的 NeoDB 页面登录并同意授权</li>
+        <li>把页面上显示的<b>授权码</b>粘贴到下方输入框，点击「换取令牌」</li>
+      </ol>
+    </div>
+
+    <div class="row">
+      <button id="oauthStart" class="ghost">一键授权</button>
+      <input type="text" id="oauthCode" placeholder="粘贴授权码" style="flex:1; min-width:180px;">
+      <button id="oauthFinish" class="ghost">换取令牌</button>
+    </div>
+
+    <div class="row">
+      <button id="test">测试连接</button>
+      <button id="save">保存设置</button>
+      <span id="status"></span>
+    </div>
+
+    <h2>同步选项</h2>
+    <div class="checks">
+      <label><input type="checkbox" id="autoSync" checked> 打分 / 写短评 / 标记时自动同步</label>
+      <label><input type="checkbox" id="syncTags" checked> 同步豆瓣标签</label>
+      <label><input type="checkbox" id="notify" checked> 同步成功后弹系统通知</label>
+    </div>
+    <label for="visibility">同步到 NeoDB 的可见范围</label>
+    <select id="visibility">
+      <option value="0">公开</option>
+      <option value="1">仅关注者</option>
+      <option value="2">仅自己</option>
+    </select>
+    <div class="hint" style="margin-top:14px;">
+      <b>同步规则：</b>豆瓣看过/读过/玩过 → NeoDB「完成」；在看/在读 → 「进行中」；想看/想读 → 「愿望清单」；
+      豆瓣五星制评分自动换算为 NeoDB 十分制（×2）。长评（影评/书评）暂不同步。
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
