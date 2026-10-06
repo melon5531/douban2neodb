@@ -1,4 +1,7 @@
-# 离豆 douban2neodb
+<div align="center">
+  <img src="docs/logo.png" width="120" alt="离豆">
+  <h1>离豆 douban2neodb</h1>
+</div>
 
 **离豆**——离开豆瓣，标记不散。一个浏览器扩展，把你在豆瓣的书影音标记完整搬进 [NeoDB](https://neodb.social)。
 

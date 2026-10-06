@@ -40,6 +40,12 @@ class App:
         root.geometry("880x680")
         root.minsize(760, 560)
         root.configure(bg=BG)
+        try:
+            logo = tk.PhotoImage(file=str(core.SCRIPT_DIR / "docs" / "logo.png"))
+            root.iconphoto(True, logo)
+            self._logo_ref = logo   # 防止被垃圾回收
+        except Exception:
+            pass
 
         self.q = queue.Queue()
         self.busy = False
