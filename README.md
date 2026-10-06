@@ -72,8 +72,6 @@
    python sync_douban_to_neodb.py sync             # 全量增量同步
    ```
 
-![桌面工具图形界面](docs/screenshot.png)
-
 同步是增量的：未变化自动跳过、可中断续传；抓取结果缓存于 `marks_cache.json`（6 小时内有效）。
 常见问题：豆瓣提示异常请求 = 触发风控，等几小时并调大 `config.ini` 的 `delay`；
 NeoDB 401 = 令牌失效，重新生成；个别条目收录失败 = 豆瓣已下架，`sync --full` 可补齐。
