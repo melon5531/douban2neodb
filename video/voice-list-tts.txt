@@ -1,0 +1,7 @@
+file 'voice-ttsmaker-01.mp3'
+file 'voice-ttsmaker-02.mp3'
+file 'voice-ttsmaker-03.mp3'
+file 'voice-ttsmaker-04.mp3'
+file 'voice-ttsmaker-05.mp3'
+file 'voice-ttsmaker-06.mp3'
+file 'voice-ttsmaker-07.mp3'

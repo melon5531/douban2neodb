@@ -1,0 +1,7 @@
+file 'voice-seg01.mp3'
+file 'voice-seg02.mp3'
+file 'voice-seg03.mp3'
+file 'voice-seg04.mp3'
+file 'voice-seg05.mp3'
+file 'voice-seg06.mp3'
+file 'voice-seg07.mp3'

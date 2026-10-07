@@ -1,0 +1,7 @@
+file 'seg-video-01.mp4'
+file 'seg-video-02.mp4'
+file 'seg-video-03.mp4'
+file 'seg-video-04.mp4'
+file 'seg-video-05.mp4'
+file 'seg-video-06.mp4'
+file 'seg-video-07.mp4'
